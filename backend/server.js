@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -10,7 +8,11 @@ const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS configuration: Update origin if needed for deployment
+app.use(cors({
+    origin: '*', // Adjust this to the allowed origin(s) if deploying publicly
+}));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -27,6 +29,7 @@ app.post('/convert', (req, res) => {
         return res.status(400).json({ message: 'YouTube link is required' });
     }
 
+    // Handle the output path to avoid file name issues
     const outputPath = path.join(downloadsDir, '%(title)s.%(ext)s');
     const command = `yt-dlp "${youtubeLink}" --extract-audio --audio-format mp3 --output "${outputPath}"`;
 
@@ -40,9 +43,10 @@ app.post('/convert', (req, res) => {
             return res.status(500).json({ message: 'Conversion failed', details: stderr });
         }
 
-        // Assuming you can get the file name from `stdout` or manually set it
-        const fileName = 'example.mp3'; // Adjust this accordingly
-        const fileUrl = `http://localhost:3001/downloads/${fileName}`;
+        // Extract the file name from the output if possible
+        // Adjust this if yt-dlp provides the filename in stdout or use a known pattern
+        const fileName = 'example.mp3'; // You'll need to dynamically determine this
+        const fileUrl = `http://${req.headers.host}/downloads/${fileName}`;
         
         res.status(200).json({ message: 'Conversion successful!', file: fileUrl });
     });
