@@ -9,7 +9,7 @@ document.getElementById('convertBtn').addEventListener('click', async () => {
     document.getElementById('result').textContent = 'Converting... Please wait.';
 
     try {
-        const response = await fetch('http://localhost:3001/convert', { 
+        const response = await fetch('https://uto-mp3.vercel.app/convert', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
