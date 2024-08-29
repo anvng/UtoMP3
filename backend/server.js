@@ -1,17 +1,15 @@
+// server.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const ytdlp = require('yt-dlp-exec');
+const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-
-// Initialize environment variables (if any)
-require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -22,35 +20,36 @@ if (!fs.existsSync(downloadsDir)) {
     fs.mkdirSync(downloadsDir);
 }
 
-// Define a GET route for the root URL
-app.get('/', (req, res) => {
-    res.send('Welcome to the YouTube to MP3 Converter API!');
-});
+app.post('/convert', (req, res) => {
+    const youtubeLink = req.body.link;
 
-// Define a POST route to handle YouTube video to MP3 conversion
-app.post('/convert', async (req, res) => {
-    const { videoUrl } = req.body;
-
-    if (!videoUrl) {
-        return res.status(400).json({ error: 'No video URL provided' });
+    if (!youtubeLink) {
+        return res.status(400).json({ message: 'YouTube link is required' });
     }
 
-    try {
-        // Use yt-dlp to download and convert the video
-        const result = await ytdlp(videoUrl, {
-            format: 'bestaudio',
-            extractAudio: true,
-            audioFormat: 'mp3',
-            output: path.join(downloadsDir, '%(title)s.%(ext)s'),  // Ensure this path is correct
-        });
+    const outputPath = path.join(downloadsDir, '%(title)s.%(ext)s');
+    const command = `yt-dlp "${youtubeLink}" --extract-audio --audio-format mp3 --output "${outputPath}"`;
 
-        res.json({ message: 'Conversion started', result });
-    } catch (error) {
-        res.status(500).json({ error: 'Conversion failed', details: error.message });
-    }
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error('Error:', error);
+            return res.status(500).json({ message: 'Conversion failed', details: error.message });
+        }
+        if (stderr) {
+            console.error('stderr:', stderr);
+            return res.status(500).json({ message: 'Conversion failed', details: stderr });
+        }
+
+        // Assuming you can get the file name from `stdout` or manually set it
+        const fileName = 'example.mp3'; // Adjust this accordingly
+        const fileUrl = `http://localhost:3001/downloads/${fileName}`;
+        
+        res.status(200).json({ message: 'Conversion successful!', file: fileUrl });
+    });
 });
 
-// Start the server
+app.use('/downloads', express.static(downloadsDir));
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
