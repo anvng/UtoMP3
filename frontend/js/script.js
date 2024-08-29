@@ -9,7 +9,7 @@ document.getElementById('convertBtn').addEventListener('click', async () => {
     document.getElementById('result').textContent = 'Converting... Please wait.';
 
     try {
-        const response = await fetch('https://... .vercel.app/convert', {
+        const response = await fetch('https://utomp3.vercel.app/convert', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
