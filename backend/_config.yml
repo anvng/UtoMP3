@@ -1,5 +1,6 @@
 exclude:
--   node_modules
--   backend/node_modules
--   Gemfile
--   Gemfile.lock
+  -   node_modules
+  -   backend/node_modules
+  -   Gemfile
+  -   Gemfile.lock
+  -   package-lock.json
